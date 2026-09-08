@@ -6,14 +6,18 @@ __pycache__/
 *.egg-info/
 
 # --- Datos ---
-# Los logs y el reporte NUNCA se versionan: contienen informacion de usuarios
-# reales. Solo se conserva el .gitkeep para que las carpetas existan en el repo.
+# El CONTENIDO nunca se versiona: los logs de entrada y el reporte de salida
+# llevan informacion de usuarios reales.
+#
+# Las CARPETAS si aparecen en GitHub, gracias al .gitkeep: al clonar el
+# repositorio ya existe data/input/ donde dejar los .log, sin tener que crearla
+# a mano ni adivinar el nombre.
 data/input/*
 data/output/*
 !data/input/.gitkeep
 !data/output/.gitkeep
 
-# Logs sueltos en la raiz del repositorio
+# Logs sueltos fuera de data/input/ (por ejemplo, dejados en la raiz por error)
 *.log
 
 # Excepcion: los logs de ejemplo de las pruebas SI se versionan. Estan recortados
