@@ -24,6 +24,11 @@ data/output/*
 # de datos reales ya anonimizados y sin ellos la suite no puede ejecutarse.
 !tests/fixtures/logs/*.log
 
+# --- Material de presentacion ---
+# Documentacion para exponer el proyecto en clase (artefacto web y guia en PDF).
+# Es material de apoyo personal, no forma parte del entregable del repositorio.
+presentacion/
+
 # --- Notebooks ---
 .ipynb_checkpoints/
 
