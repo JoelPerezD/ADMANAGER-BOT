@@ -1,0 +1,40 @@
+# --- Entornos virtuales y dependencias ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- Datos ---
+# Los logs y el reporte NUNCA se versionan: contienen informacion de usuarios
+# reales. Solo se conserva el .gitkeep para que las carpetas existan en el repo.
+data/input/*
+data/output/*
+!data/input/.gitkeep
+!data/output/.gitkeep
+
+# Logs sueltos en la raiz del repositorio
+*.log
+
+# Excepcion: los logs de ejemplo de las pruebas SI se versionan. Estan recortados
+# de datos reales ya anonimizados y sin ellos la suite no puede ejecutarse.
+!tests/fixtures/logs/*.log
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Herramientas ---
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- Artefactos de Windows / WSL ---
+# Al copiar archivos desde Windows, NTFS crea flujos alternativos ":Zone.Identifier".
+*:Zone.Identifier
+Thumbs.db
+.DS_Store
+
+# --- Editores ---
+.vscode/
+.idea/
