@@ -1,4 +1,4 @@
-# Reporte del bot de ADManager
+# Tabla Reporte del bot de ADManager
 
 Pipeline que convierte los logs diarios del bot en una tabla de reporte lista para
 analizar: **`tabla_reporte_bot.csv`**.
@@ -241,8 +241,3 @@ el código:
 3. **Los usuarios llegan URL-encoded.** En la query aparecen valores como
    `Ana+laura`. Sin decodificarlos no cruzan con su búsqueda en ADManager.
 
-## Privacidad
-
-Los logs y el reporte contienen datos de usuarios reales y **están excluidos del
-control de versiones** (`.gitignore`). En el repositorio solo viven los `.gitkeep`
-de `data/input/` y `data/output/`.

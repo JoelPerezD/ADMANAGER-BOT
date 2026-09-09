@@ -6,7 +6,8 @@ __pycache__/
 *.egg-info/
 
 # --- Datos ---
-# El CONTENIDO nunca se versiona: los logs de entrada y el reporte de salida
+# El CONTENIDO nunca se versiona: los logs de entrada y el re
+orte de salida
 # llevan informacion de usuarios reales.
 #
 # Las CARPETAS si aparecen en GitHub, gracias al .gitkeep: al clonar el
@@ -23,11 +24,6 @@ data/output/*
 # Excepcion: los logs de ejemplo de las pruebas SI se versionan. Estan recortados
 # de datos reales ya anonimizados y sin ellos la suite no puede ejecutarse.
 !tests/fixtures/logs/*.log
-
-# --- Material de presentacion ---
-# Documentacion para exponer el proyecto en clase (artefacto web y guia en PDF).
-# Es material de apoyo personal, no forma parte del entregable del repositorio.
-presentacion/
 
 # --- Notebooks ---
 .ipynb_checkpoints/

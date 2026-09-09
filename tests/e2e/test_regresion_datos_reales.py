@@ -1,12 +1,4 @@
-"""Regresion contra los logs reales, si estan disponibles.
-
-Los conteos que se afirman aqui se obtuvieron analizando los logs de produccion y
-son la mejor red de seguridad del proyecto: cualquier cambio en las reglas que
-altere la clasificacion hara fallar estas pruebas.
-
-Como ``data/input/`` no se versiona, las pruebas se omiten cuando los logs no
-estan presentes (por ejemplo en una copia recien clonada del repositorio).
-"""
+"""Regresion contra los logs reales, si estan disponibles."""
 
 from __future__ import annotations
 

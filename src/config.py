@@ -1,13 +1,4 @@
-"""Configuracion y constantes del pipeline.
-
-Este modulo concentra todo lo que un analista podria querer ajustar sin tocar la
-logica: rutas por defecto, nombres de columnas, textos de los resultados y el
-registro de acciones que el pipeline sabe procesar.
-
-Regla importante: los literales que se comparan contra datos del log se guardan
-**ya normalizados** con :func:`~src.utils.texto.normalizar`. Asi es imposible que
-una mayuscula o un acento se cuele en un solo lado de la comparacion.
-"""
+"""Configuracion y constantes del pipeline"""
 
 from __future__ import annotations
 

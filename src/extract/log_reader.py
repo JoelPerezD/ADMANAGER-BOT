@@ -1,19 +1,5 @@
 """Lectura del archivo .log diario y agrupacion en operaciones.
 
-El formato del log tiene dos particularidades que condicionan todo este modulo y
-que fueron verificadas sobre los logs reales:
-
-1. **Un registro puede ocupar varias lineas.** El volcado ``Raw Response:`` de
-   ADManager continua en lineas que *no* repiten el ``operation_Id``. Por eso no
-   se puede iterar linea a linea: una linea que empieza con timestamp abre un
-   registro nuevo, y cualquier linea posterior sin timestamp pertenece al
-   registro anterior.
-
-2. **Las operaciones se intercalan.** El bot atiende peticiones concurrentes, asi
-   que los registros de una misma operacion no son contiguos (en el log del
-   2026-08-29, 101 de 442 operaciones estan partidas en varios bloques). Agrupar
-   por registros consecutivos fragmentaria casi una de cada cuatro operaciones,
-   de modo que se acumulan en un diccionario indexado por ``operation_Id``.
 """
 
 from __future__ import annotations

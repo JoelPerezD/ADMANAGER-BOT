@@ -1,13 +1,4 @@
-"""Fixtures y constructores compartidos por la suite de pruebas.
-
-Se combinan dos tipos de datos:
-
-* **Logs reales recortados** (``tests/fixtures/logs/``), que reproducen el formato
-  exacto del bot -incluidos los registros multilinea y las operaciones
-  intercaladas- y cubren los escenarios que ocurren en produccion.
-* **Constructores sinteticos** (las funciones de este modulo), para los casos que
-  no aparecen en los logs disponibles: 202, 429 y la OU restringida.
-"""
+"""Fixtures y constructores compartidos por la suite de pruebas."""
 
 from __future__ import annotations
 
