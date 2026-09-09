@@ -1,5 +1,17 @@
 # Tabla Reporte del bot de ADManager
 
+En la empresa hay un bot que resetea contraseñas de Active Directory. Funciona
+bien, pero lo único que deja atrás es un `.log` enorme por día, pensado para
+depurar y no para que nadie lo lea. Cuando alguien pregunta cuántos reseteos se
+hicieron ayer, o por qué le rebotó la solicitud de algun usuario, no hay forma de
+responder sin abrir el archivo y rastrearlo a mano.
+
+Esto es lo que se realizo para no volver a hacer eso: un pipeline que toma esos logs,
+los ordena en un CSV con una fila por operación y traduce el desenlace de cada
+una a algo que se entienda leyéndolo. Donde el log dice `403`, el reporte dice
+por qué se denegó. La idea es que el archivo se pueda abrir en Excel, filtrar y
+sacar conclusiones sin saber nada del bot ni del formato del log.
+
 Pipeline que convierte los logs diarios del bot en una tabla de reporte lista para
 analizar: **`tabla_reporte_bot.csv`**.
 

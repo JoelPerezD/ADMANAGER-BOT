@@ -68,16 +68,7 @@ UMBRAL_TIMEOUT_SEGUNDOS: int = 35
 @dataclass(frozen=True)
 class Accion:
     """Describe un tipo de operacion que el pipeline sabe extraer del log.
-
-    Attributes:
-        clave: Identificador interno; es el valor que se pasa a ``--accion``.
-        endpoint: Fragmento de URL que identifica la operacion en el log. Basta
-            con que aparezca en el primer registro de la operacion.
-        etiqueta: Texto que se escribe en la columna ``acción`` del reporte.
-        sistema: Texto que se escribe en la columna ``sistema``.
-        parametro_solicitante: Nombre del parametro de query con el solicitante.
-        parametro_target: Nombre del parametro de query con el usuario objetivo.
-    """
+ """
 
     clave: str
     endpoint: str
