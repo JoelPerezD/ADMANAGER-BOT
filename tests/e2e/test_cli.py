@@ -160,6 +160,54 @@ def test_fecha_invalida_la_rechaza_argparse(dir_fixtures, reporte):
         ejecutar(dir_fixtures, reporte.with_name("otro.csv"), "--fecha", "29-08-2026")
 
 
+def test_todas_procesa_cada_log_de_la_carpeta(dir_fixtures, reporte):
+    """--todas no requiere --fecha: recorre todo lo que haya en --input-dir."""
+    codigo = main(["--todas", "--input-dir", str(dir_fixtures), "--output", str(reporte)])
+
+    assert codigo == EXITO
+    assert len(leer(reporte)) == OPERACIONES_29 + OPERACIONES_30
+
+
+def test_todas_junto_con_hasta_es_un_error(dir_fixtures, reporte):
+    codigo = main(
+        [
+            "--todas",
+            "--hasta",
+            "2026-08-30",
+            "--input-dir",
+            str(dir_fixtures),
+            "--output",
+            str(reporte),
+        ]
+    )
+
+    assert codigo == ERROR
+
+
+def test_fecha_y_todas_son_mutuamente_excluyentes(dir_fixtures, reporte):
+    with pytest.raises(SystemExit):
+        main(
+            [
+                "--fecha",
+                "2026-08-29",
+                "--todas",
+                "--input-dir",
+                str(dir_fixtures),
+                "--output",
+                str(reporte),
+            ]
+        )
+
+
+def test_todas_sin_logs_devuelve_codigo_dedicado(tmp_path, reporte):
+    carpeta_vacia = tmp_path / "sin_logs"
+    carpeta_vacia.mkdir()
+
+    codigo = main(["--todas", "--input-dir", str(carpeta_vacia), "--output", str(reporte)])
+
+    assert codigo == SIN_ARCHIVO
+
+
 def test_ejecucion_como_modulo(dir_fixtures, reporte):
     """El pipeline debe correr tal cual se documenta en el README."""
     proceso = subprocess.run(

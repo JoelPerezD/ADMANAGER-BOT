@@ -7,6 +7,7 @@ Ejemplos de uso:
     python -m src.main --fecha 2026-08-29
     python -m src.main --fecha 2026-08-29 --hasta 2026-09-01
     python -m src.main --fecha 2026-08-29 --dry-run
+    python -m src.main --todas
 """
 
 from __future__ import annotations
@@ -60,13 +61,19 @@ def construir_argumentos() -> argparse.ArgumentParser:
             "  python -m src.main --fecha 2026-08-29\n"
             "  python -m src.main --fecha 2026-08-29 --hasta 2026-09-01\n"
             "  python -m src.main --fecha 2026-08-29 --dry-run\n"
+            "  python -m src.main --todas\n"
         ),
     )
-    analizador.add_argument(
+    grupo_fechas = analizador.add_mutually_exclusive_group(required=True)
+    grupo_fechas.add_argument(
         "--fecha",
-        required=True,
         type=parsear_fecha,
-        help="Fecha del log a procesar (YYYY-MM-DD).",
+        help="Fecha del log a procesar (YYYY-MM-DD). Con --hasta, procesa el rango completo.",
+    )
+    grupo_fechas.add_argument(
+        "--todas",
+        action="store_true",
+        help="Procesa todas las fechas con log disponible en --input-dir.",
     )
     analizador.add_argument(
         "--hasta",
@@ -198,11 +205,20 @@ def main(argv: list[str] | None = None) -> int:
     accion = ACCIONES[argumentos.accion]
     momento = datetime.now(UTC)
 
-    try:
-        fechas = rango_de_fechas(argumentos.fecha, argumentos.hasta)
-    except ValueError as error:
-        logger.error("%s", error)
-        return ERROR
+    if argumentos.todas:
+        if argumentos.hasta:
+            logger.error("--hasta no aplica junto con --todas.")
+            return ERROR
+        fechas = log_reader.fechas_disponibles(argumentos.input_dir)
+        if not fechas:
+            logger.error("No hay ningun log en %s.", argumentos.input_dir)
+            return SIN_ARCHIVO
+    else:
+        try:
+            fechas = rango_de_fechas(argumentos.fecha, argumentos.hasta)
+        except ValueError as error:
+            logger.error("%s", error)
+            return ERROR
 
     filas: list[dict[str, str]] = []
     resumen: Counter = Counter()

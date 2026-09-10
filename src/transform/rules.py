@@ -31,6 +31,16 @@ from src.utils.texto import empieza_con_alguno, normalizar
 Regla = Callable[[Operacion], str]
 
 
+def _regla_fija(clave_mensaje: str) -> Regla:
+    """Envuelve un mensaje de :data:`~src.config.MENSAJES` como regla.
+
+    La mayoria de los codigos de estado (exito, error interno, sin tokens...)
+    no dependen de los datos de la operacion: no hace falta una funcion por
+    cada uno, solo declarar que mensaje les corresponde en la tabla de reglas.
+    """
+    return lambda _: MENSAJES[clave_mensaje]
+
+
 # --- Predicados de negocio -------------------------------------------------
 
 
@@ -65,11 +75,6 @@ def _tiene_oficina_corporativa(target: UsuarioAD) -> bool:
 
 
 # --- Una funcion por codigo de estado --------------------------------------
-
-
-def _resultado_ok(_: Operacion) -> str:
-    """200: el reseteo se ejecuto correctamente."""
-    return MENSAJES["ok"]
 
 
 def _resultado_aceptado(operacion: Operacion) -> str:
@@ -118,16 +123,6 @@ def _resultado_no_encontrado(operacion: Operacion) -> str:
     return MENSAJES["no_encontrado_target"]
 
 
-def _resultado_sin_tokens(_: Operacion) -> str:
-    """429: ADManager se quedo sin tokens disponibles."""
-    return MENSAJES["sin_tokens"]
-
-
-def _resultado_error_interno(_: Operacion) -> str:
-    """500: error inesperado del bot."""
-    return MENSAJES["error_interno"]
-
-
 def _resultado_servicio_no_disponible(operacion: Operacion) -> str:
     """503: se concatena el error exacto que devolvio ADManager."""
     if operacion.mensaje_admanager:
@@ -148,19 +143,83 @@ def _resultado_timeout(operacion: Operacion) -> str:
 
 #: Reglas de la accion "reseteo de usuario", indexadas por codigo HTTP.
 REGLAS_RESETEO: dict[int, Regla] = {
-    200: _resultado_ok,
+    200: _regla_fija("ok"),
     202: _resultado_aceptado,
     403: _resultado_denegado,
     404: _resultado_no_encontrado,
-    429: _resultado_sin_tokens,
-    500: _resultado_error_interno,
+    429: _regla_fija("sin_tokens"),
+    500: _regla_fija("error_interno"),
     503: _resultado_servicio_no_disponible,
     504: _resultado_timeout,
 }
 
+# --- Reglas de la accion "registro_sap" -------------------------------------
+#
+# Mensajes tomados literal del PDF "2026-08-25 StatusCodes Alta SAP V2". El
+# 403 agrupa deliberadamente "conflicto con el puesto solicitado" (City Club,
+# Soriana, gerente) en un unico mensaje generico: el propio documento indica
+# descartar esas tres causas por separado. El 202 (ticket creado y no
+# cerrado / ticket no creado) y las causas del 400 distintas al numero de
+# empleado no numerico (tratamiento invalido, puesto inexistente) no son
+# distinguibles todavia con los campos que el parser captura hoy del
+# disparador; quedan con el mensaje que da la mayor cobertura del PDF hasta
+# que se amplie el parser.
+
+
+def _resultado_sap_solicitud_invalida(operacion: Operacion) -> str:
+    """400: numero de empleado no numerico, o razon indeterminada."""
+    if not operacion.target.isdigit():
+        return MENSAJES["sap_400_numero_empleado"]
+    return MENSAJES["sap_400_desconocido"]
+
+
+def _resultado_sap_denegado(operacion: Operacion) -> str:
+    """403: causas verificables con ADManager; el resto cae en "conflicto
+    con el puesto solicitado", tal como pide el PDF.
+    """
+    solicitante = operacion.usuario_solicitante
+    target = operacion.usuario_target
+
+    if solicitante is not None and _tiene_oficina_corporativa(solicitante):
+        return MENSAJES["sap_403_oat"]
+
+    hay_ambos_usuarios = solicitante is not None and target is not None
+    if hay_ambos_usuarios and not _comparten_oficina(solicitante, target):
+        return MENSAJES["sap_403_oficina_distinta"]
+
+    return MENSAJES["sap_403_conflicto_puesto"]
+
+
+def _resultado_sap_no_encontrado(operacion: Operacion) -> str:
+    """404: precisa cual de los dos usuarios no existe."""
+    falta_solicitante = operacion.usuario_solicitante is None
+    falta_target = operacion.usuario_target is None
+
+    if falta_solicitante and falta_target:
+        return f"{MENSAJES['sap_404_solicitante']} {MENSAJES['sap_404_target']}"
+    if falta_solicitante:
+        return MENSAJES["sap_404_solicitante"]
+    return MENSAJES["sap_404_target"]
+
+
+#: Reglas de la accion "registro_sap", indexadas por codigo HTTP.
+REGLAS_SAP: dict[int, Regla] = {
+    200: _regla_fija("sap_200"),
+    202: _regla_fija("sap_202"),
+    208: _regla_fija("sap_208"),
+    400: _resultado_sap_solicitud_invalida,
+    401: _regla_fija("sap_401"),
+    403: _resultado_sap_denegado,
+    404: _resultado_sap_no_encontrado,
+    500: _regla_fija("sap_500"),
+    503: _regla_fija("sap_503"),
+}
+
+
 #: Tabla de reglas por accion. Una accion nueva registra aqui su propia tabla.
 REGLAS_POR_ACCION: dict[str, dict[int, Regla]] = {
     "reseteo_usuario": REGLAS_RESETEO,
+    "registro_sap": REGLAS_SAP,
 }
 
 

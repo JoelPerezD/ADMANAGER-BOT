@@ -10,8 +10,9 @@ Detalles del formato que resuelve este modulo (verificados sobre los logs reales
   endpoint: aparecen valores como ``Ana+laura`` o ``CONSUMOS+INTERNOS+0358``. Sin
   decodificarlos no cruzan con su busqueda en ADManager.
 * El orden de las busquedas ``SearchUser`` **varia** entre operaciones, asi que
-  cada resultado se indexa por el ``sAMAccountName`` que aparece en su ``filter``,
-  nunca por su posicion.
+  cada resultado se indexa por el valor que aparece en su ``filter``
+  (``sAMAccountName`` para el reseteo, ``employeeID`` para el target del
+  registro en SAP), nunca por su posicion.
 * Un usuario inexistente se reporta con ``"UsersList":[],"count":0`` y HTTP 200:
   el "no encontrado" esta en el cuerpo, no en el status.
 """
@@ -41,8 +42,13 @@ PATRON_DISPARADOR = re.compile(r'HTTP Request:\s+(?P<url>\S+)\s+"HTTP/1\.1"\s+(?
 #: Marca de tiempo al inicio de cada registro.
 PATRON_TIMESTAMP = re.compile(r"^(?P<ts>\d{4}-\d{2}-\d{2}T[\d:.]+)Z")
 
-#: Usuario consultado en una busqueda de ADManager.
-PATRON_FILTRO_USUARIO = re.compile(r"filter':\s*'\(sAMAccountName:equal:(?P<usuario>[^)]+)\)'")
+#: Usuario consultado en una busqueda de ADManager. El reseteo busca siempre
+#: por ``sAMAccountName``; el registro en SAP busca al target por
+#: ``employeeID``. Se reconocen ambos campos porque ``_indexar_usuarios``
+#: indexa por el valor capturado, sea cual sea el campo del filtro.
+PATRON_FILTRO_USUARIO = re.compile(
+    r"filter':\s*'\((?:sAMAccountName|employeeID):equal:(?P<usuario>[^)]+)\)'"
+)
 
 #: Respuesta de ADManager a un reseteo: ``ADM-Raw response | status: 200 | body: [...]``.
 PATRON_ADM_RAW = re.compile(

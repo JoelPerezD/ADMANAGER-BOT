@@ -74,6 +74,9 @@ uv run python -m src.main --fecha 2026-08-29
 # Procesar un rango de fechas (ambas incluidas)
 uv run python -m src.main --fecha 2026-08-29 --hasta 2026-09-01
 
+# Procesar todos los logs que haya en --input-dir, sin indicar fechas
+uv run python -m src.main --todas
+
 # Ver qué haría, sin escribir nada
 uv run python -m src.main --fecha 2026-08-29 --dry-run
 
@@ -105,9 +108,10 @@ Reporte actualizado: data/output/tabla_reporte_bot.csv
 
 | Opción | Descripción |
 |---|---|
-| `--fecha` | Fecha del log a procesar (`YYYY-MM-DD`). **Obligatoria.** |
-| `--hasta` | Fecha final para procesar un rango. |
-| `--accion` | Tipo de operación a extraer. Por defecto `reseteo_usuario`. |
+| `--fecha` | Fecha del log a procesar (`YYYY-MM-DD`). Obligatoria salvo que uses `--todas`. |
+| `--hasta` | Fecha final para procesar un rango junto con `--fecha`. |
+| `--todas` | Procesa todas las fechas con log disponible en `--input-dir`. No se combina con `--fecha` ni `--hasta`. |
+| `--accion` | `reseteo_usuario` (por defecto) o `registro_sap`. Ver [Acciones soportadas](#acciones-soportadas). |
 | `--input-dir` | Carpeta de los `.log`. Por defecto `data/input/`. |
 | `--output` | Ruta del CSV. Por defecto `data/output/tabla_reporte_bot.csv`. |
 | `--dry-run` | Procesa y muestra el resumen sin escribir en disco. |
@@ -122,7 +126,7 @@ Códigos de salida: `0` correcto · `1` error · `2` no se encontró ningún log
 | `id` | `operation_Id` del log. Clave única de la operación. |
 | `timestamp` | Momento de la solicitud. |
 | `solicitante` / `target` | `sAMAccountName` de cada usuario. |
-| `acción` / `sistema` | `Reseteo de usuario` / `ADManager`. |
+| `acción` / `sistema` | Etiqueta y sistema de la acción procesada (p. ej. `Reseteo de usuario` / `ADManager`). |
 | `nombre completo …` | `FIRST_NAME` + `LAST_NAME` de ADManager. |
 | `oficina …` | Campo `OFFICE` de ADManager. |
 | `resultado final` | Qué pasó, explicado. |
@@ -195,35 +199,51 @@ Cada capa tiene una responsabilidad única, así que un cambio de formato en el 
 solo toca `extract/` y `transform/`, y un cambio en el destino del reporte solo
 toca `load/`.
 
-## Añadir una acción nueva
+## Acciones soportadas
 
-El pipeline solo procesa los reseteos, pero está preparado para más. Los logs ya
-contienen, por ejemplo, el endpoint `v2/sap/register_user`. Para darlo de alta:
-
-1. Registra la acción en `src/config.py`:
-
-   ```python
-   ACCIONES = {
-       ...,
-       "registro_sap": Accion(
-           clave="registro_sap",
-           endpoint="sap/register_user",
-           etiqueta="Registro de usuario",
-           sistema="SAP",
-           parametro_solicitante="sAMAccountName_requester",
-           parametro_target="sAMAccountName_target",
-       ),
-   }
-   ```
-
-2. Añade su tabla de reglas en `src/transform/rules.py`, dentro de
-   `REGLAS_POR_ACCION`.
-
-Ni el lector ni el escritor necesitan cambios. Después:
+| Acción (`--accion`) | Endpoint | Sistema |
+|---|---|---|
+| `reseteo_usuario` (por defecto) | `users_admin/resetuser` | ADManager |
+| `registro_sap` | `sap/register_user` | SAP |
 
 ```bash
 uv run python -m src.main --fecha 2026-08-29 --accion registro_sap
 ```
+
+### Reglas del "resultado final" — `registro_sap`
+
+Mensajes tomados literal del PDF `2026-08-25 StatusCodes Alta SAP V2`.
+
+| Código | Resultado |
+|---|---|
+| **200** | El usuario target fue registrado exitosamente, se creó el ticket control y se cerró. |
+| **202** | El usuario target fue registrado exitosamente, se creó el ticket control pero no pudo cerrarse. |
+| **208** | El usuario target ya existe en el ambiente ECC ECP de SAP. |
+| **400** | Precisa si el número de empleado no es numérico; si no, razón indeterminada. |
+| **401** | El solicitante no es gerente ni administrador de sistemas. |
+| **403** | El solicitante es de OAT, o las oficinas no coinciden, o conflicto con el puesto solicitado. |
+| **404** | Precisa si no se encontró al solicitante, al target o a ninguno. |
+| **500** | Error desconocido. |
+| **503** | Todas las validaciones fueron exitosas, pero el servicio de SAP falló. |
+
+El 403 agrupa deliberadamente varias causas del PDF (City Club, Soriana, gerente)
+bajo "conflicto con el puesto solicitado": el propio documento indica
+descartarlas por separado, pero el parser hoy no captura los campos que
+distinguirían cada una.
+
+## Añadir una acción nueva
+
+El pipeline está preparado para agregar más acciones sin tocar el lector ni el
+escritor, tal como se hizo con `registro_sap`:
+
+1. Regístrala en `src/config.py`, en `ACCIONES` (endpoint, sistema, y los
+   parámetros de la query donde vienen el solicitante y el objetivo) y en
+   `MENSAJES` (los textos de cada código de resultado).
+2. Añade su tabla de reglas en `src/transform/rules.py`, dentro de
+   `REGLAS_POR_ACCION`.
+3. Si la acción busca usuarios en ADManager por un campo distinto a
+   `sAMAccountName` o `employeeID`, súmalo a `PATRON_FILTRO_USUARIO` en
+   `src/transform/parser.py`.
 
 ## Desarrollo
 

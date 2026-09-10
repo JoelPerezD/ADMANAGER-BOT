@@ -1,7 +1,7 @@
 """Lectura del archivo .log diario y agrupacion en operaciones.
 
 """
-
+9
 from __future__ import annotations
 
 import re
@@ -35,6 +35,26 @@ class OperacionCruda:
     def disparador(self) -> str:
         """Primer registro de la operacion: la llamada al endpoint del bot."""
         return self.registros[0]
+
+
+def fechas_disponibles(dir_entrada: Path) -> list[date]:
+    """Lista las fechas para las que hay un log en ``dir_entrada``.
+
+    Solo se consideran los archivos cuyo nombre respeta el formato
+    ``YYYY-MM-DD.log``; cualquier otro archivo de la carpeta se ignora en
+    silencio, en vez de hacer fallar la corrida por un archivo suelto que no
+    tiene nada que ver.
+
+    Returns:
+        Las fechas encontradas, ordenadas de la mas antigua a la mas reciente.
+    """
+    fechas = []
+    for ruta in dir_entrada.glob("*.log"):
+        try:
+            fechas.append(date.fromisoformat(ruta.stem))
+        except ValueError:
+            continue
+    return sorted(fechas)
 
 
 def ruta_log(fecha: date, dir_entrada: Path) -> Path:

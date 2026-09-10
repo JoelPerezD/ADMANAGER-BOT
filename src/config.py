@@ -67,8 +67,7 @@ UMBRAL_TIMEOUT_SEGUNDOS: int = 35
 # ---------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Accion:
-    """Describe un tipo de operacion que el pipeline sabe extraer del log.
- """
+    """Describe un tipo de operacion que el pipeline sabe extraer del log."""
 
     clave: str
     endpoint: str
@@ -91,6 +90,14 @@ ACCIONES: dict[str, Accion] = {
         sistema="ADManager",
         parametro_solicitante="sAMAccountName_requester",
         parametro_target="sAMAccountName_target",
+    ),
+    "registro_sap": Accion(
+        clave="registro_sap",
+        endpoint="sap/register_user",
+        etiqueta="Alta de usuario SAP",
+        sistema="SAP",
+        parametro_solicitante="requester_username",
+        parametro_target="target_employee_id",
     ),
 }
 
@@ -122,6 +129,31 @@ MENSAJES: dict[str, str] = {
         "(duración: {duracion} s). Se da por hecho que el reseteo no se pudo ejecutar."
     ),
     "no_clasificado": "Resultado no clasificado (código HTTP {status}).",
+    # --- registro_sap: texto tomado literal del PDF "2026-08-25 StatusCodes
+    # Alta SAP V2" ------------------------------------------------------
+    "sap_200": (
+        "El usuario target fue registrado exitosamente, se creó el ticket control y se cerró."
+    ),
+    "sap_202": (
+        "El usuario target fue registrado exitosamente, se creó el ticket "
+        "control pero no pudo cerrarse."
+    ),
+    "sap_208": "El usuario target ya existe en el ambiente ECC ECP de SAP.",
+    "sap_400_numero_empleado": "El número de empleado no es numérico.",
+    "sap_400_desconocido": (
+        "Todas las validaciones fueron exitosas, el servicio de SAP está "
+        "disponible, pero no se pudo ejecutar el alta por una razón desconocida."
+    ),
+    "sap_401": "El usuario solicitante no es gerente ni administrador de sistemas.",
+    "sap_403_oat": (
+        "El usuario solicitante es de OAT, por lo que no tiene permitido ejecutar este proceso."
+    ),
+    "sap_403_oficina_distinta": "Los usuarios no pertenecen a la misma oficina.",
+    "sap_403_conflicto_puesto": "Conflicto con el puesto solicitado.",
+    "sap_404_solicitante": "No existe el usuario solicitante.",
+    "sap_404_target": "No existe el usuario target.",
+    "sap_500": "Error desconocido.",
+    "sap_503": "Todas las validaciones fueron exitosas, pero el servicio del lado de SAP falló.",
 }
 
 #: Etiquetas cortas para el resumen por consola. El detalle completo (duracion
